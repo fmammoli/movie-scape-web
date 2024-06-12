@@ -15,11 +15,11 @@ export default function Wrapper(){
     async function handleStartStream() {
         
         if(webcamRef.current?.video){
+            await webcamRef.current.video.play()
             // if(canvasRef.current){
             //     canvasRef.current.width = webcamRef.current.video.videoWidth
             //     canvasRef.current.height = webcamRef.current.video.videoHeight
             // }
-            await webcamRef.current.video.play()
             console.log(webcamRef.current.video.width)
             console.log(webcamRef.current.video.videoHeight)
         }
@@ -34,15 +34,12 @@ export default function Wrapper(){
 
     return (
         <div className="flex justify-center">
-            <Webcam mirrored ref={webcamRef} onUserMedia={handleStartStream}></Webcam>
-            
+            <Webcam mirrored ref={webcamRef} onUserMedia={handleStartStream} className={"hidden"}></Webcam>
                 <div className="absolute top-0 w-[640px] h-[480px]">
                     <Canvas ref={canvasRef} className={"border-red-400"}>
-                    <HandControlledScene video={video}></HandControlledScene>
+                        <HandControlledScene video={video}></HandControlledScene>
                     </Canvas>
                 </div>
-            
-           
         </div>
     )
 }
