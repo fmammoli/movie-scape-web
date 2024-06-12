@@ -155,20 +155,18 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
         <Suspense fallback={null}>
            
             <mesh position={[0,0,0]} ref={boxRef3} onClick={(event)=>video?.pause()}>
-                <boxGeometry attach="geometry" args={[4, 4, 4]} />
-                <meshStandardMaterial attach="material-0" color={"blue"}></meshStandardMaterial>
-                <meshStandardMaterial attach="material-1">
-                    <videoTexture attach="map" args={[mudflatScatterMap]}></videoTexture>
+                <boxGeometry attach="geometry" args={[3, 3, 3]} />
+                <meshStandardMaterial attach="material-0" color={"blue"} opacity={0.5} transparent></meshStandardMaterial>
+                <meshStandardMaterial attach="material-1" opacity={0.5} transparent color={"pink"}>
                 </meshStandardMaterial>
-                <meshStandardMaterial attach="material-2" color={"red"} />
-                <meshStandardMaterial attach="material-3" color={"green"} />
-                <meshStandardMaterial attach="material-4" >
+                <meshStandardMaterial attach="material-2" color={"red"} opacity={0.5} transparent/>
+                <meshStandardMaterial attach="material-3" color={"green"} opacity={0.5} transparent/>
+                <meshStandardMaterial attach="material-4" opacity={0.7} transparent>
                     <videoTexture attach="map" args={[zigzagMap]}></videoTexture>
                 </meshStandardMaterial>
-                <meshStandardMaterial attach="material-5">
-                    <videoTexture attach="map" args={[lluviaMap]}></videoTexture>
+                <meshStandardMaterial attach="material-5" color={"purple"} opacity={0.5} transparent>
                 </meshStandardMaterial>
-                <meshStandardMaterial attach="material-6" color={"black"} />
+                <meshStandardMaterial attach="material-6" color={"cyan"} opacity={0.5} transparent/>
             </mesh>
                 
             <mesh position={[0,0,0]} ref={thumbRef}>
