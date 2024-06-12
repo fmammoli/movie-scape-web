@@ -48,19 +48,16 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
             if(hands.length > 0){
                 if(boxRef.current){
                     if(hands[0].handedness === "Right"){
-                        console.log("right")
                         boxRef.current.rotation.y += - Math.sin(delta)
                         
                     }
                     if(hands[0].handedness === "Left"){
-                        console.log("left")
                         boxRef.current.rotation.y += Math.sin(delta)
                     }
                     const pos = {
                         hand: hands[0],
                         box: boxRef.current.position
                     }
-                    console.log(pos)
                     if(cameraRef.current){
                         const vect = convertTo3DCoordinates(hands[0].keypoints[8].x, hands[0].keypoints[8].y, video.videoWidth, video.videoHeight, cameraRef.current)
                         boxRef.current.position.x = vect.x * -100
