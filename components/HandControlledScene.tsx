@@ -1,31 +1,67 @@
 "use client"
 
-import { Camera, useFrame, useLoader } from "@react-three/fiber"
+import { Camera, useFrame } from "@react-three/fiber"
 import { Suspense, useEffect, useRef, useState } from "react"
-import { OrbitControls, PerspectiveCamera, PivotControls } from "@react-three/drei"
-import { Group, Mesh, PerspectiveCamera as ThreePerspectiveCamera, Vector3, FrontSide, BackSide, TextureLoader } from "three"
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei"
+import { Mesh, PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from "three"
 import { useControls } from "leva"
+
 
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 
-function convertTo3DCoordinates(x: number, y: number, videoWidth:number, videoHeight:number, camera: Camera) {
-    const normalizedX = (x / videoWidth) * 2 - 1
-    const normalizedY = -(y / videoHeight) * 2 + 1;
+const PINCH_DISTANCE_THRESHOLD = 0.4
 
-    const vector = new Vector3(normalizedX, normalizedY, -1).unproject(camera);
-    return vector
+//another alternative
+//https://portal.gitnation.org/contents/build-a-3d-solar-system-with-hand-recognition-and-threejs
+//look at talk
+
+//const vector = new Vector3();
+//const position = new Vector3();
+function convertTo3DCoordinates(x: number, y: number, videoWidth:number, videoHeight:number, camera: Camera) {
+    //New Way
+    const vector = new Vector3();
+    const position = new Vector3();
+
+    const normalizedX = (x / videoWidth) * 2 - 1;
+    const normalizedY = -(y / videoHeight) * 2 + 1;
+    
+    vector.set(normalizedX, normalizedY, 0.5);
+    vector.unproject(camera);
+    vector.sub(camera.position).normalize()
+    
+    // //@ts-ignore
+    const distance = 0.89 - camera.position.z / vector.z
+
+    // const distance = - camera.position.z / vector.z
+    position.copy(camera.position).add(vector.multiplyScalar(distance))
+    position.x = position.x * -10
+    position.y = (position.y * 10)
+    return position
+    //Olds way
+    // const normalizedX = (x / videoWidth) * 2 - 1
+    // const normalizedY = -(y / videoHeight) * 2 + 1;
+
+    // const vector = new Vector3(normalizedX, normalizedY, -1).unproject(camera);
+    // console.log(vector)
+    // return vector
 }
 
 function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
 
     const directionalLightRef = useRef(null);
     const {lightColor, lightIntensity} = useControls({lightColor:"white", lightIntensity:{value:10, min:0, max:20}});
+    // Hand diagrams
+    //https://www.npmjs.com/package/@tensorflow-models/hand-pose-detection
     const thumbRef = useRef<Mesh>(null);
     const indexRef = useRef<Mesh>(null);
+    const middleRef = useRef<Mesh>(null);
+    const pinkyRef = useRef<Mesh>(null);
     const boxRef3 = useRef<Mesh>(null);
     const cameraRef = useRef<ThreePerspectiveCamera>(null);
 
     const [detector, setDetector] = useState<handPoseDetection.HandDetector>();
+
+    const prevHandsRef = useRef<handPoseDetection.Hand[] | null>(null)
 
     useEffect(()=>{
         async function loadHandPoseDetection() {
@@ -44,69 +80,180 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
         
     },[])
 
-    const prevHandsRef = useRef<handPoseDetection.Hand[] | null>(null)
+    const detectPinchMove = (currentHands: handPoseDetection.Hand[], prevHands: handPoseDetection.Hand[]) =>{
+        if(thumbRef.current && indexRef.current && middleRef.current && video && cameraRef.current){
+            const currentHand = currentHands[0]
+            
+            const vectThumb = convertTo3DCoordinates(currentHand.keypoints[4].x, currentHand.keypoints[4].y, video.videoWidth, video.videoHeight, cameraRef.current)
+            const vectThumbMCP = convertTo3DCoordinates(currentHand.keypoints[2].x, currentHand.keypoints[2].y, video.videoWidth, video.videoHeight, cameraRef.current)
+            const vectIndex = convertTo3DCoordinates(currentHand.keypoints[8].x, currentHand.keypoints[8].y, video.videoWidth, video.videoHeight, cameraRef.current)
+            const vectMiddle = convertTo3DCoordinates(currentHand.keypoints[12].x, currentHand.keypoints[12].y, video.videoWidth, video.videoHeight, cameraRef.current)
+            
+            const currentDist = vectIndex.distanceTo(vectThumb)
+            const auxDist = vectMiddle.distanceTo(vectThumbMCP)
+            
+            const dist1Pinch= currentDist <= PINCH_DISTANCE_THRESHOLD? true : false
+            const auxDistPinch = auxDist >= 0.5 ? true : false
+            const isCurrentPinch = dist1Pinch && auxDistPinch
 
-    async function detectHands(delta:number, video: HTMLVideoElement){
-        if(detector && video.readyState === 4 && thumbRef.current && indexRef.current && boxRef3.current){
-            const hands = await detector.estimateHands(video)       
-            if(hands.length > 0){
+            const prevHand = prevHands[0]
+            if(prevHandsRef && prevHandsRef.current && prevHandsRef.current.length > 0){
+                const prevVectPointerFinger = convertTo3DCoordinates(prevHand.keypoints[8].x, prevHand.keypoints[8].y, video.videoWidth, video.videoHeight, cameraRef.current)
+                const prevVectThumbFinger = convertTo3DCoordinates(prevHandsRef.current[0].keypoints[4].x, prevHandsRef.current[0].keypoints[4].y, video.videoWidth, video.videoHeight, cameraRef.current)
+                const prevDist = prevVectPointerFinger.distanceTo(prevVectThumbFinger)
 
-                //detect pinch
-                if(hands[0].handedness === "Right"){
-                    //boxRef.current.rotation.y += - Math.sin(delta)
-                }
-                if(hands[0].handedness === "Left"){
-                    //boxRef.current.rotation.y += Math.sin(delta)
-                }
-                const pos = {
-                    hand: hands[0],
-                    box: thumbRef.current.position
-                }
-                if(cameraRef.current){
-                    const vectIndex = convertTo3DCoordinates(hands[0].keypoints[8].x, hands[0].keypoints[8].y, video.videoWidth, video.videoHeight, cameraRef.current)
-                    indexRef.current.position.x = vectIndex.x * -100
-                    indexRef.current.position.y = vectIndex.y * 100
+                const isPrevPinch = prevDist <= PINCH_DISTANCE_THRESHOLD ? true : false
 
-                    const vectThumb = convertTo3DCoordinates(hands[0].keypoints[4].x, hands[0].keypoints[4].y, video.videoWidth, video.videoHeight, cameraRef.current)
-                    thumbRef.current.position.x = vectThumb.x * -100
-                    thumbRef.current.position.y = vectThumb.y * 100
-
-                    const currentDist = vectIndex.distanceTo(vectThumb)
+                if(isCurrentPinch && isPrevPinch){
                     
-                    const isCurrentPinch = currentDist <= 0.004 ? true : false
+                    const dist = prevVectThumbFinger.distanceTo(vectThumb)
+                    
+                    if(dist > 0.015){
 
-                    if(prevHandsRef && prevHandsRef.current){
-                        const prevVectPointerFinger = convertTo3DCoordinates(prevHandsRef.current[0].keypoints[8].x, prevHandsRef.current[0].keypoints[8].y, video.videoWidth, video.videoHeight, cameraRef.current)
-                        const prevVectThumbFinger = convertTo3DCoordinates(prevHandsRef.current[0].keypoints[4].x, prevHandsRef.current[0].keypoints[4].y, video.videoWidth, video.videoHeight, cameraRef.current)
-                        const prevDist = prevVectPointerFinger.distanceTo(prevVectThumbFinger)
-
-                        const isPrevPinch = prevDist <= 0.004 ? true : false
+                        const  xdist = Math.abs(vectThumb.x - prevVectThumbFinger.x)
+                        const  ydist = Math.abs(vectThumb.y - prevVectThumbFinger.y)
                         
-                        if(isCurrentPinch && isPrevPinch){
-                            //console.log("pinching")
-                            const dist = prevVectThumbFinger.distanceTo(vectThumb)
-                            if(dist > 0.0004){
-                                const  x = vectThumb.x - prevVectThumbFinger.x
-                                
-                                boxRef3.current.rotateY(-Math.sin(x * 100))
-                                const  y = vectThumb.y - prevVectThumbFinger.y
-                                //boxRef3.current.rotateX(-Math.sin(y * 100))
-                            }       
-                        } else {
-                            //console.log("not pitching")
+                        if(xdist > 0.03 || ydist > 0.03){
+                            if(boxRef3.current){
+                                if(xdist >= ydist && xdist >= ydist * 2){
+                                    const x = vectThumb.x - prevVectThumbFinger.x
+                                    boxRef3.current.rotateOnWorldAxis(new Vector3(0,1,0), Math.sin(x))
+                                } 
+                                if(ydist > xdist  && ydist > xdist * 2){
+                                    const y = vectThumb.y - prevVectThumbFinger.y
+                                    boxRef3.current.rotateOnWorldAxis(new Vector3(1,0,0), -Math.sin(y))
+                                } 
+                            }
                         }
+                    }       
+                }
+            }
+        }
+    }
+
+    function keypointVector3(keypoint: handPoseDetection.Hand["keypoints"][0]){
+        if(keypoint.x && keypoint.y && keypoint.z){
+            return new Vector3(keypoint.x, keypoint.y, keypoint.z)
+        }
+    }
+
+    //Not working, poistions are weird
+    function converHandKeypointsToThreeJSCoord(hand: handPoseDetection.Hand, video: HTMLVideoElement, camera: Camera){
+        const threeJSKeypoints: handPoseDetection.Hand["keypoints"][0][] = hand.keypoints.map((item)=>{
+                const threeJSCoords = convertTo3DCoordinates(item.x, item.y, video.videoWidth, video.videoWidth, camera)
+                const newItem = {
+                    ...item,
+                    x: threeJSCoords.x,
+                    y: threeJSCoords.y,
+                    z: threeJSCoords.z,
+                }
+                
+                return newItem
+        })
+        return threeJSKeypoints
+    }
+
+    const detectSnap = (currentHands: handPoseDetection.Hand[], prevHands: handPoseDetection.Hand[]) =>{
+        if(!thumbRef.current || !indexRef.current || !middleRef.current || !video || !cameraRef.current){
+            return;
+        }
+
+        const currentKeypoints = converHandKeypointsToThreeJSCoord(currentHands[0], video, cameraRef.current)
+        const prevKeypoint = converHandKeypointsToThreeJSCoord(prevHands[0], video, cameraRef.current)
+        
+        if(!currentKeypoints || !prevKeypoint){
+            return;
+        }
+        const prevWristpVect = keypointVector3(prevKeypoint[0])
+        const prevThumbTipVect =  keypointVector3(prevKeypoint[4])
+        const prevMiddleTipVect = keypointVector3(prevKeypoint[12])
+        const prevRingTipVect = keypointVector3(prevKeypoint[16])
+        
+        if(prevWristpVect && prevThumbTipVect && prevMiddleTipVect && prevRingTipVect){
+            const prevSnapdist1 = prevThumbTipVect.distanceTo(prevMiddleTipVect)
+            const prevSnapdist2 = prevRingTipVect.distanceTo(prevWristpVect)
+   
+            const prevIsSnapCandidade = prevSnapdist1 <= 0.36 ? true : false
+
+            const currWristpVect = keypointVector3(currentKeypoints[0])
+            const currThumbTipVect =  keypointVector3(currentKeypoints[4])
+            const currThumbMCPVect =  keypointVector3(currentKeypoints[2])
+            const currMiddleTipVect = keypointVector3(currentKeypoints[12])
+            const currRingTipVect = keypointVector3(currentKeypoints[16])
+
+            if(currMiddleTipVect && currWristpVect && currThumbTipVect && currRingTipVect && currThumbMCPVect){
+                const currSnapdist1 = currThumbMCPVect.distanceTo(currMiddleTipVect)
+                
+                const currIsSnapCandidade = currSnapdist1 <= 0.5 ? true : false
+                
+                if(prevIsSnapCandidade && currIsSnapCandidade){
+                    console.log("snap")
+                    if(zigzagMap.paused){
+                        zigzagMap.play()
+                    } else {
+                        zigzagMap.pause()
+                    }
+                    if(boxRef3.current){
+                        boxRef3.current.rotation.x = 0
+                        boxRef3.current.rotation.y = 0
+                        boxRef3.current.rotation.z = 0
                     }
                 }
-             prevHandsRef.current = hands
             }
 
-            thumbRef.current
-        
         }
+    }
+    
+
+    function drawHand(hand: handPoseDetection.Hand) {
+        if(video && cameraRef.current){
+            const tkeypoints = converHandKeypointsToThreeJSCoord(hand, video, cameraRef.current)
+            
+            //const wristpVect = (tkeypoints[0] && keypointVector3(tkeypoints[0])) as Vector3
+            // const thumbTipVect = (tkeypoints[4] && keypointVector3(tkeypoints[4])) as Vector3
+            // const indexTipVect = (tkeypoints[8] && keypointVector3(tkeypoints[8])) as Vector3
+            // const middleTipVect = (tkeypoints[12] && keypointVector3(tkeypoints[12])) as Vector3
+            //const ringTipVect = (tkeypoints[16] && keypointVector3(tkeypoints[16])) as Vector3
+
+            if(thumbRef.current && indexRef.current && middleRef.current){
+                const vectThumb = convertTo3DCoordinates(hand.keypoints[4].x, hand.keypoints[4].y, video.videoWidth, video.videoHeight, cameraRef.current)
+                thumbRef.current.position.x = vectThumb.x 
+                thumbRef.current.position.y = vectThumb.y 
         
+                // thumbRef.current.position.x = tkeypoints[4].x 
+                // thumbRef.current.position.y = tkeypoints[4].y 
+
+                const vectIndex = convertTo3DCoordinates(hand.keypoints[8].x, hand.keypoints[8].y, video.videoWidth, video.videoHeight, cameraRef.current)
+                indexRef.current.position.x = vectIndex.x 
+                indexRef.current.position.y = vectIndex.y 
+        
+                const vectMiddle = convertTo3DCoordinates(hand.keypoints[12].x, hand.keypoints[12].y, video.videoWidth, video.videoHeight, cameraRef.current)
+                middleRef.current.position.x = vectMiddle.x 
+                middleRef.current.position.y = vectMiddle.y
+            }
+        }
+    }
+
+    async function detectHands(delta:number, video: HTMLVideoElement){
+        if(detector && cameraRef.current && video.readyState === 4){
+            const hands = await detector.estimateHands(video)      
+            if(hands.length > 0){
+                if(prevHandsRef.current){
+                    detectPinchMove(hands, prevHandsRef.current)
+
+                    detectSnap(hands, prevHandsRef.current)
+                } 
+
+                drawHand(hands[0])
+                // console.log("setting prev hands")
+                // console.log(hands)
+                prevHandsRef.current = hands
+            }
+        }
     }
     
     useFrame((state, delta) =>{
+        
         if(video){
             detectHands(delta, video)
         }
@@ -114,17 +261,16 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
 
     //const videoMap = useLoader(TextureLoader, "/mudflat_scatter.mp4")
 
-
-    const [zigzagMap] = useState(() => {
+    const [zigzagMap, setZigZag] = useState(() => {
         const vid = document.createElement("video");
         vid.src = "/zigzag.mp4";
         vid.crossOrigin = "Anonymous";
         vid.loop = true;
         vid.muted = true;
-        vid.play();
+        //vid.play();
         return vid;
     });
-
+    
 
     const [lluviaMap] = useState(() => {
         const vid = document.createElement("video");
@@ -153,9 +299,9 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
         <ambientLight></ambientLight>
         <directionalLight position={[0,0,2]} color={lightColor} intensity={lightIntensity}></directionalLight>
         <Suspense fallback={null}>
-           
+                       
             <mesh position={[0,0,0]} ref={boxRef3} onClick={(event)=>video?.pause()}>
-                <boxGeometry attach="geometry" args={[3, 3, 3]} />
+                 <boxGeometry attach="geometry" args={[3, 3, 3]} />
                 <meshStandardMaterial attach="material-0" color={"blue"} opacity={0.5} transparent></meshStandardMaterial>
                 <meshStandardMaterial attach="material-1" opacity={0.5} transparent color={"pink"}>
                 </meshStandardMaterial>
@@ -170,14 +316,17 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
             </mesh>
                 
             <mesh position={[0,0,0]} ref={thumbRef}>
-                <sphereGeometry attach="geometry" args={[0.1,24,24]}></sphereGeometry>
+                <sphereGeometry attach="geometry" args={[0.2,10,10]}></sphereGeometry>
                 <meshStandardMaterial attach="material" color={"#6be092"} />
             </mesh>
             <mesh position={[0,0,0]} ref={indexRef}>
-                <sphereGeometry attach="geometry" args={[0.1,24,24]}></sphereGeometry>
+                <sphereGeometry attach="geometry" args={[0.2,10,10]}></sphereGeometry>
                 <meshStandardMaterial attach="material" color={"red"} />
             </mesh>
-            
+            <mesh position={[0,0,0]} ref={middleRef}>
+                <sphereGeometry attach="geometry" args={[0.2,10,10]}></sphereGeometry>
+                <meshStandardMaterial attach="material" color={"purple"} />
+            </mesh>
                 
         </Suspense>
         <OrbitControls></OrbitControls>
