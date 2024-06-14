@@ -2,8 +2,8 @@
 
 import { Camera, useFrame } from "@react-three/fiber"
 import { Suspense, useEffect, useRef, useState } from "react"
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei"
-import { Mesh, PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from "three"
+import { OrbitControls, PerspectiveCamera, Text } from "@react-three/drei"
+import { Mesh, Quaternion, PerspectiveCamera as ThreePerspectiveCamera, Vector3, DoubleSide, VideoTexture } from "three"
 import { useControls } from "leva"
 
 
@@ -34,8 +34,8 @@ function convertTo3DCoordinates(x: number, y: number, videoWidth:number, videoHe
 
     // const distance = - camera.position.z / vector.z
     position.copy(camera.position).add(vector.multiplyScalar(distance))
-    position.x = position.x * -10
-    position.y = (position.y * 10)
+    position.x = position.x * -1
+    position.y = position.y 
     return position
     //Olds way
     // const normalizedX = (x / videoWidth) * 2 - 1
@@ -113,18 +113,20 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
                         const  xdist = Math.abs(vectThumb.x - prevVectThumbFinger.x)
                         const  ydist = Math.abs(vectThumb.y - prevVectThumbFinger.y)
                         
-                        if(xdist > 0.03 || ydist > 0.03){
-                            if(boxRef3.current){
-                                if(xdist >= ydist && xdist >= ydist * 2){
-                                    const x = vectThumb.x - prevVectThumbFinger.x
-                                    boxRef3.current.rotateOnWorldAxis(new Vector3(0,1,0), Math.sin(x))
-                                } 
-                                if(ydist > xdist  && ydist > xdist * 2){
-                                    const y = vectThumb.y - prevVectThumbFinger.y
-                                    boxRef3.current.rotateOnWorldAxis(new Vector3(1,0,0), -Math.sin(y))
-                                } 
-                            }
+
+                        const deltaX = vectThumb.x - prevVectThumbFinger.x
+                        const deltaY = vectThumb.y - prevVectThumbFinger.y
+                        const rotationSpeed = 10
+
+                        const rotationAxisX = new Vector3(0,1,0)
+                        const rotationAxisY = new Vector3(1,0,0)
+
+                        const worldRotationAxisX = rotationAxisX.clone().applyQuaternion(cameraRef.current.quaternion).normalize()
+                        if(Math.abs(deltaY) > Math.abs(deltaX * 2)){
+                            const worldRotationAxisY = rotationAxisY.clone().applyQuaternion(cameraRef.current.quaternion).normalize()
+                            boxRef3.current?.rotateOnWorldAxis(worldRotationAxisY, -deltaY * rotationSpeed)
                         }
+                        boxRef3.current?.rotateOnWorldAxis(worldRotationAxisX, deltaX * rotationSpeed)
                     }       
                 }
             }
@@ -186,17 +188,14 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
                 
                 const currIsSnapCandidade = currSnapdist1 <= 0.5 ? true : false
                 
+                //console.log("Material:", boxRef3.current?.material, "\nCurrentFace: ", currentFaceRef.current)
+
                 if(prevIsSnapCandidade && currIsSnapCandidade){
                     console.log("snap")
-                    if(zigzagMap.paused){
-                        zigzagMap.play()
-                    } else {
-                        zigzagMap.pause()
-                    }
+                    
                     if(boxRef3.current){
-                        boxRef3.current.rotation.x = 0
-                        boxRef3.current.rotation.y = 0
-                        boxRef3.current.rotation.z = 0
+                        const currentRotation  = boxRef3.current.rotation.clone()
+                        //boxRef3.current.rotation.set(0, currentRotation.y, 0)
                     }
                 }
             }
@@ -251,6 +250,36 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
             }
         }
     }
+
+    //not working
+    // function rotateToFace(face: number) {
+    //     console.log("rotate to face: ", face)
+    //     if(boxRef3.current !== null && cameraRef.current){
+    //         const mesh = boxRef3.current;
+            
+    //         // Compute the direction vector from the camera to the cube
+    //         const directionVector = new Vector3();
+    //         cameraRef.current.getWorldPosition(directionVector);
+    //         mesh.getWorldPosition(directionVector).sub(cameraRef.current.position).normalize();
+
+    //         // Find the target face normal in world coordinates
+    //         const targetNormal = faces[currentFaceRef.current].normal.clone();
+    //         console.log(targetNormal)
+    //         targetNormal.applyQuaternion(mesh.quaternion);
+            
+    //         // Compute the rotation quaternion to align targetNormal with directionVector
+    //         const rotationQuat = new Quaternion();
+    //         console.log(rotationQuat)
+    //         rotationQuat.setFromUnitVectors(targetNormal, directionVector);
+
+    //         // Apply the rotation quaternion to the mesh
+    //         mesh.quaternion.normalize();
+    //         mesh.quaternion.premultiply(rotationQuat);
+            
+    //     }
+        
+
+    // }
     
     useFrame((state, delta) =>{
         
@@ -259,60 +288,43 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
         }
     })
 
-    //const videoMap = useLoader(TextureLoader, "/mudflat_scatter.mp4")
-
-    const [zigzagMap, setZigZag] = useState(() => {
-        const vid = document.createElement("video");
-        vid.src = "/zigzag.mp4";
-        vid.crossOrigin = "Anonymous";
-        vid.loop = true;
-        vid.muted = true;
-        //vid.play();
-        return vid;
-    });
     
+    const videoPaths = [
+        {videoName: "zigZag", videoPath:"/zigzag.mp4", face:"front"},
+        {videoName: "lluvia", videoPath:"/lluvia.mp4", face:"top"},
+        {videoName: "mudflatScatter", videoPath:"/mudflat_scatter.mp4", face:"back"}
+    ]
 
-    const [lluviaMap] = useState(() => {
+
+    const videoFaces = videoPaths.map((item, index)=>{
         const vid = document.createElement("video");
-        vid.src = "/lluvia.mp4";
+        vid.src = item.videoPath;
         vid.crossOrigin = "Anonymous";
         vid.loop = true;
-        vid.muted = true;
-        vid.play();
-        return vid;
-    });
 
+        return {...item, videoEl: vid, videoTexture: new VideoTexture(vid)}
+    })
 
-    const [mudflatScatterMap] = useState(() => {
-        const vid = document.createElement("video");
-        vid.src = "/mudflat_scatter.mp4";
-        vid.crossOrigin = "Anonymous";
-        vid.loop = true;
-        vid.muted = true;
-        vid.play();
-        return vid;
-    });
-    
+    console.log(videoFaces)
+    const videoFacesRef = useRef(videoFaces)
     return (
     <>
-        <PerspectiveCamera ref={cameraRef}></PerspectiveCamera>
+        <PerspectiveCamera ref={cameraRef} makeDefault position={[0,0,10]}></PerspectiveCamera>
         <ambientLight></ambientLight>
         <directionalLight position={[0,0,2]} color={lightColor} intensity={lightIntensity}></directionalLight>
         <Suspense fallback={null}>
                        
-            <mesh position={[0,0,0]} ref={boxRef3} onClick={(event)=>video?.pause()}>
-                 <boxGeometry attach="geometry" args={[3, 3, 3]} />
-                <meshStandardMaterial attach="material-0" color={"blue"} opacity={0.5} transparent></meshStandardMaterial>
-                <meshStandardMaterial attach="material-1" opacity={0.5} transparent color={"pink"}>
-                </meshStandardMaterial>
-                <meshStandardMaterial attach="material-2" color={"red"} opacity={0.5} transparent/>
+            <mesh position={[0,0,0]} ref={boxRef3}>
+                <boxGeometry attach="geometry" args={[3, 3, 3]} />
+                
+                {videoFaces.map((item, index) => {
+                    return <meshStandardMaterial key={item.videoName} attach={`material-${index}`} opacity={0.8} transparent map={item.videoTexture} side={DoubleSide}/>
+                })}
+                
                 <meshStandardMaterial attach="material-3" color={"green"} opacity={0.5} transparent/>
-                <meshStandardMaterial attach="material-4" opacity={0.7} transparent>
-                    <videoTexture attach="map" args={[zigzagMap]}></videoTexture>
-                </meshStandardMaterial>
-                <meshStandardMaterial attach="material-5" color={"purple"} opacity={0.5} transparent>
-                </meshStandardMaterial>
-                <meshStandardMaterial attach="material-6" color={"cyan"} opacity={0.5} transparent/>
+                <meshStandardMaterial attach="material-4" color={"purple"} opacity={0.5} transparent/>
+                <meshStandardMaterial attach="material-5" color={"red"} opacity={0.5} transparent></meshStandardMaterial>
+
             </mesh>
                 
             <mesh position={[0,0,0]} ref={thumbRef}>
@@ -327,13 +339,36 @@ function HandlControlledScene2({video}:{video: HTMLVideoElement | null}){
                 <sphereGeometry attach="geometry" args={[0.2,10,10]}></sphereGeometry>
                 <meshStandardMaterial attach="material" color={"purple"} />
             </mesh>
-                
+            <FaceLabel position={[0, 0, 0.55]} rotation={[0, 0, 0]} label="Front" />
+            <FaceLabel position={[0, 0, -0.55]} rotation={[0, Math.PI, 0]} label="Back" />
+            <FaceLabel position={[0, 0.55, 0]} rotation={[-Math.PI / 2, 0, 0]} label="Top" />
+            <FaceLabel position={[0, -0.55, 0]} rotation={[Math.PI / 2, 0, 0]} label="Bottom" />
+            <FaceLabel position={[0.55, 0, 0]} rotation={[0, -Math.PI / 2, 0]} label="Right" />
+            <FaceLabel position={[-0.55, 0, 0]} rotation={[0, Math.PI / 2, 0]} label="Left" />
         </Suspense>
-        <OrbitControls></OrbitControls>
+        {/* <OrbitControls></OrbitControls> */}
 
     </>
     )
 }
 
 
+function FaceLabel({ position, label, rotation}:{position: [number, number, number], label:string, rotation:[number, number, number]}) {
+    return (
+      <mesh position={position}>
+        <Text
+            position={position}
+            rotation={rotation}
+            fontSize={0.6}
+            color="white"
+            outlineColor="black"
+            outlineWidth={0.02}
+            anchorX="center"
+            anchorY="middle"
+            >
+            {label}
+        </Text>
+      </mesh>
+    );
+  }
 export default HandlControlledScene2
