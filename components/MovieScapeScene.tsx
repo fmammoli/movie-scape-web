@@ -26,7 +26,7 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
                 <planeGeometry args={[1,1]}></planeGeometry>
                 <meshStandardMaterial attach="material" color={"purple"} />
             </mesh> */}
-            <VideoCube padding={0} ref={videoCubeRef}></VideoCube>
+            <VideoCube padding={2} ref={videoCubeRef}></VideoCube>
             {webcamVideo && videoCubeRef.current && videoCubeState && <HandControls video={webcamVideo} targetMesh={videoCubeRef.current}></HandControls>}
             
             <OrbitControls />

@@ -116,10 +116,12 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
                                 targetMesh && targetMesh.rotateOnWorldAxis(worldRotationAxisY, -deltaY * rotationSpeed)
                             }
                             targetMesh && targetMesh.rotateOnWorldAxis(worldRotationAxisX, deltaX * rotationSpeed)
-                            }
+                            return true
+                        }
                     }   
                 }
             }
+            return false
         }
 
         function detechSnap(hand: handPoseDetection.Hand){
@@ -152,34 +154,11 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
                 const middleDist = prevMiddleTip.distanceTo(middleTip)
                 //console.log(middleDist)
                 if(isPrevSnap && isCurrentSnap && middleDist > 0.8){
-                    console.log("snap")
+                    console.log("snap!");
+                    return true;
                 }
-                
-                // if(snapDistEndThumbMCP <= 0.9){
-                    
-                //     if(prevHandsRef.current){
-                
-                //         const prevHand = prevHandsRef.current[0]
-                //         const prevKeypointsThreeJS = prevHand.keypoints.map(keypoint =>{
-                //             return convertTo3DCoordinates(keypoint.x, keypoint.y, video.videoWidth, video.videoHeight, camera);
-                //         })
-                //         const prevThumbTip = prevKeypointsThreeJS[4];
-                //         const prevMiddleTip = prevKeypointsThreeJS[8];
-
-                //         const snapStartDist = prevMiddleTip.distanceTo(prevThumbTip)
-                //         //console.log(snapStartDist)
-                //         if(snapStartDist <= 0.42){
-                //             console.log("snap")
-                //         }
-                        
-                //     }
-
-                // }
-                
-                
-
-
             }
+            return false;
         }
 
         async function detectHands(){
