@@ -1,9 +1,7 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import { useFrame } from "@react-three/fiber";
-import { Camera, Group, Mesh, Vector3 } from "three";
-import { group } from "console";
-import { FlakesTexture } from "three/examples/jsm/Addons.js";
+import { Camera, Group, Vector3 } from "three";
 
 function convertTo3DCoordinates(x: number, y: number, videoWidth:number, videoHeight:number, camera: Camera) {
     //New Way
@@ -28,7 +26,7 @@ function convertTo3DCoordinates(x: number, y: number, videoWidth:number, videoHe
 
 const PINCH_DISTANCE_THRESHOLD = 0.4
 
-export default function HandControls({video, targetMesh}:{video: HTMLVideoElement, targetMesh: Group}){
+export default function HandControls({video, targetMesh}:{video: HTMLVideoElement, targetMesh: Group | null}){
     const [detector, setDetector] = useState<handPoseDetection.HandDetector>();
     const handGroupRef = useRef<Group>(null)
 
@@ -57,6 +55,7 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
         const camera = state.camera
 
         function drawHand(hand:handPoseDetection.Hand){
+            
             if(handGroupRef.current){
                 const keypointsThreeJS = hand.keypoints.map(keypoint =>{
                     return convertTo3DCoordinates(keypoint.x, keypoint.y, video.videoWidth, video.videoHeight, camera);
@@ -64,9 +63,12 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
                 
                 keypointsThreeJS.forEach((keypoint, index) =>{
                     if(handGroupRef.current){
-                        handGroupRef.current.children[index].position.set(keypoint.x, keypoint.y, keypoint.z)
+                        
+                        handGroupRef.current.children[index].position.set(keypoint.x, keypoint.y, keypoint.z);
+                        
+                    
                     }
-                })
+                })                
                 
             }
              
@@ -155,6 +157,10 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
                 //console.log(middleDist)
                 if(isPrevSnap && isCurrentSnap && middleDist > 0.8){
                     console.log("snap!");
+                    
+                    if(targetMesh){
+                        targetMesh.rotation.set(0,0,0);
+                    }
                     return true;
                 }
             }
@@ -184,17 +190,18 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
     
     
     
-    const points = new Array(21).fill(null)
-    
+    const points = new Array<[number, number, number]>(21).fill([0,0,0])
+
     return(
-        <group ref={handGroupRef}>
+        <group ref={handGroupRef} name={"hand"}>
             {points.map((item, index)=>{
-                
                 return (
-                    <mesh key={`hand-points-${index}`} position={[index/10,0,0]}>
+                    <>
+                    <mesh key={`hand-points-${index}`} position={[index/10,item[1],item[2]]} name={"hand-mesh"}>
                         <sphereGeometry attach="geometry" args={[0.05,10,10]}></sphereGeometry>
                         <meshStandardMaterial attach="material" color={"purple"} />
                     </mesh>
+                    </>
                 )
             })}
         </group>

@@ -1,5 +1,5 @@
 import { Color, MeshProps } from "@react-three/fiber";
-import { DoubleSide, VideoTexture } from "three";
+import { DoubleSide, FrontSide, VideoTexture } from "three";
 import {Text} from "@react-three/drei"
 
 interface ColorFaceProps extends MeshProps {
@@ -14,7 +14,7 @@ export default function VideoFace({ position, rotation, label, padding, color }:
   
     return (
       <group position={position} rotation={rotation}>
-        <mesh>
+        <mesh name={label}>
           <planeGeometry args={[1 - padding, 1 - padding]}></planeGeometry>
           <meshBasicMaterial color={color} transparent opacity={0.5} side={DoubleSide}/>
         </mesh>

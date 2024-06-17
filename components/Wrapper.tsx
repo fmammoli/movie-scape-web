@@ -35,7 +35,7 @@ export default function Wrapper(){
 
     return (
         <div className="flex justify-center">
-            <Webcam mirrored ref={webcamRef} onUserMedia={handleStartStream} className={"hidden"}></Webcam>
+            <Webcam mirrored ref={webcamRef} onUserMedia={handleStartStream} className={""}></Webcam>
                 <div className="absolute top-0 w-[640px] h-[480px]">
                     <Canvas ref={canvasRef} className={"border-red-400"}>
                         {/* <HandControlledScene video={video}></HandControlledScene> */}
