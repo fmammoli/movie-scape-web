@@ -37,10 +37,12 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
     const videoCubeRef = useRef<Group | null>(null)
     const ref = videoCubeRef
 
+    const currentVideo = useState()
+
     const planeFacingCameraRef = useRef<Mesh | null>(null)
 
     useEffect(()=>{
-        console.log(videoCubeRef)
+        //console.log(videoCubeRef)
         if(videoCubeRef.current){
             setVideoCubeState(videoCubeRef.current)
         }
@@ -67,7 +69,7 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
 
                 // Optionally, add VertexNormalsHelper to visualize normals
                 const helper = new VertexNormalsHelper(item, 0.5, 0xff0000);
-                scene.add(helper);
+                //scene.add(helper);
             })
             
             //console.log(ref.current.children[0])
@@ -115,57 +117,45 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
             } else {
                 planeFacingCameraRef.current = null
             }
-
-            //Working!!!! Just need to extend this for more planes and I can detect which face is facing the camera.
-            //const isFacingCamera = dotProducts[0] > -1 && dotProducts[0] < -0.7
-
-            //console.log("is faceing: ",isFacingCamera);
-            
-    //      // For visualization, change color based on facing status
-            //@ts-ignore
-            //planeMashes[0].material.color.set(isFacingCamera ? 'green' : 'red');
-            // if(closerDot){
-            //     const closerPlane = planeMashes[dotProducts.indexOf(closerDot)]
-            //     console.log(closerPlane.name)
-            // }
         }
-    //   if(ref.current){
-
-    //     ref.current.geometry.computeVertexNormals()
-
-
-    //     // Optionally, add VertexNormalsHelper to visualize normals
-    //     const helper = new VertexNormalsHelper(ref.current, 0.5, 0xff0000);
-    //     scene.add(helper);
-
-        
-    //     const normalAttr = ref.current.geometry.attributes.normal;
-    //     const normal = new Vector3(normalAttr.getX(0), normalAttr.getY(0), normalAttr.getZ(0));
-
-    //     // Transform the normal to world space
-    //     const worldNormal = normal.clone().applyMatrix4(ref.current.matrixWorld).normalize();
-
-        
-    //     // Calculate camera direction (forward vector)
-    //     const cameraDirection = new Vector3();
-    //     camera.getWorldDirection(cameraDirection);
-        
-    //     // Calculate the dot product between the plane's normal and the camera direction
-    //     const dotProduct = worldNormal.dot(cameraDirection);
-
-
-    //     // Check if the plane is facing the camera
-    //     //console.log(dotProduct)
-    //     const isFacingCamera = dotProduct < 0;
-
-    //     const difMinusOne =  Math.abs(dotProduct + 1)
-    //     console.log(difMinusOne)
-
-    //      // For visualization, change color based on facing status
-    //     ref.current.material.color.set(isFacingCamera ? 'green' : 'red');
-    //   }
     })
 
+
+    function handleSnap(){
+        if(planeFacingCameraRef.current){
+            //planeFacingCameraRef.current.material.map.source.data.play()
+            videoCubeRef.current?.children.forEach((item, index)=>{
+                item.children.forEach((item2, index2)=>{
+                    const mesh = item2 as Mesh;
+                    if(mesh.geometry.type === "PlaneGeometry"){
+                        // console.log(mesh)
+                        // console.log(planeFacingCameraRef.current)
+                        console.log("uuid: ", mesh.uuid, "\n    : ",planeFacingCameraRef.current?.uuid)
+                        if(mesh.uuid === planeFacingCameraRef.current?.uuid){
+                            console.log("should play:")
+                            //@ts-ignore
+                            console.log(mesh.material.map.source.data)
+                            
+                            //@ts-ignore
+                            const video = mesh.material.map.source.data as HTMLVideoElement
+                            //console.log(video)
+                            //video.load()
+                            if(video.paused){
+                                video.play()
+                            }else {
+                                video.pause()
+                            }
+                            
+                        }else {
+                            //@ts-ignore
+                            //mesh.material.map.source.data.pause()
+                        }
+                        
+                    }
+                })
+            })
+        }
+    }
 
     return (
         <>
@@ -177,7 +167,7 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
                 <meshStandardMaterial attach="material" color={"purple"} />
             </mesh> */}
             <VideoCube padding={0} ref={videoCubeRef}></VideoCube>
-            {webcamVideo && <HandControls video={webcamVideo} targetMesh={videoCubeRef.current}></HandControls>}
+            {webcamVideo && <HandControls video={webcamVideo} targetMesh={videoCubeRef.current} onSnap={handleSnap}></HandControls>}
             
             <OrbitControls />
         </>

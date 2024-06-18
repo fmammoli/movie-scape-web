@@ -26,7 +26,13 @@ function convertTo3DCoordinates(x: number, y: number, videoWidth:number, videoHe
 
 const PINCH_DISTANCE_THRESHOLD = 0.4
 
-export default function HandControls({video, targetMesh}:{video: HTMLVideoElement, targetMesh: Group | null}){
+type HandControlsProps = {
+    video: HTMLVideoElement,
+    targetMesh: Group | null,
+    onSnap: () => void
+}
+
+export default function HandControls({video, targetMesh, onSnap}:HandControlsProps){
     const [detector, setDetector] = useState<handPoseDetection.HandDetector>();
     const handGroupRef = useRef<Group>(null)
 
@@ -107,7 +113,7 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
                         if(moveDist > 0.015){
                             const deltaX = thumbTip.x - prevthumbTip.x
                             const deltaY = thumbTip.y - prevthumbTip.y
-                            const rotationSpeed = 0.5
+                            const rotationSpeed = 1
 
                             const rotationAxisX = new Vector3(0,1,0)
                             const rotationAxisY = new Vector3(1,0,0)
@@ -158,9 +164,10 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
                 if(isPrevSnap && isCurrentSnap && middleDist > 0.8){
                     console.log("snap!");
                     
-                    if(targetMesh){
-                        targetMesh.rotation.set(0,0,0);
-                    }
+                    onSnap()
+                    // if(targetMesh){
+                    //     targetMesh.rotation.set(0,0,0);
+                    // }
                     return true;
                 }
             }
@@ -196,12 +203,10 @@ export default function HandControls({video, targetMesh}:{video: HTMLVideoElemen
         <group ref={handGroupRef} name={"hand"}>
             {points.map((item, index)=>{
                 return (
-                    <>
                     <mesh key={`hand-points-${index}`} position={[index/10,item[1],item[2]]} name={"hand-mesh"}>
                         <sphereGeometry attach="geometry" args={[0.05,10,10]}></sphereGeometry>
                         <meshStandardMaterial attach="material" color={"purple"} />
                     </mesh>
-                    </>
                 )
             })}
         </group>
