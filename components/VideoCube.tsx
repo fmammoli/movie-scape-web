@@ -44,60 +44,53 @@ const VideoCube = forwardRef(function VideoCube({padding}:VideoFaceCubeProps, re
     ];
 
     
-
+    const gap = 0
     return (
         <>
         {
           <group ref={ref}>
             <VideoFace
-              position={[0, 0, -0.5]}
-              rotation={[0, Math.PI, 0]}
+              position={[0, 0, 0.5 + gap]}
+              rotation={[0, 0, 0]}
               texture={textures[0]}
               label={labels[0]}
               padding={padding}
             />
-            {/* <VideoFace
-              position={[0, 0, - 0.5 - padding / 2]}
+            <VideoFace
+              position={[0, 0, - 0.5 - gap]}
               rotation={[0, Math.PI , 0]}
               texture={textures[0]}
               label={labels[1]}
               padding={padding}
-            /> */}
-            {/* <VideoFace
-              position={[0, 0, -0.5 + padding / 2]}
-              rotation={[0, Math.PI, 0]}
-              texture={textures[1]}
-              label={labels[1]}
-              padding={padding}
             />
             <VideoFace
-              position={[0, 0.5 - padding / 2, 0]}
-              rotation={[-Math.PI / 2, 0, 0]}
-              texture={textures[2]}
+              position={[0, 0.5 + gap, 0]}
+              rotation={[-Math.PI/2, 0 , 0]}
+              texture={textures[0]}
               label={labels[2]}
               padding={padding}
             />
-            <ColorFace
-              position={[0, -0.5 + padding / 2, 0]}
-              rotation={[Math.PI / 2, 0, 0]}
+            <VideoFace
+              position={[0, -0.5 + gap, 0]}
+              rotation={[Math.PI/2, 0 , 0]}
+              texture={textures[0]}
               label={labels[3]}
               padding={padding}
-              color={"purple"}
             />
-            <ColorFace
-              position={[0.5 - padding / 2, 0, 0]}
-              rotation={[0, -Math.PI / 2, 0]}
+            <VideoFace
+              position={[0.5, 0 + gap, 0]}
+              rotation={[0, Math.PI/2, 0]}
+              texture={textures[0]}
               label={labels[4]}
               padding={padding}
-              color={"blue"}
             />
-            <ColorFace
-              position={[-0.5 + padding / 2, 0, 0]}
-              rotation={[0, Math.PI / 2, 0]}
+            <VideoFace
+              position={[-0.5, 0 + gap, 0]}
+              rotation={[0, -Math.PI/2, 0]}
+              texture={textures[0]}
               label={labels[5]}
               padding={padding}
-              color={"green"}
-            /> */}
+            />
           </group>
         }
       </>

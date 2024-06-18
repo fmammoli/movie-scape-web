@@ -57,7 +57,7 @@ export default function VideoFace({ position, rotation, texture, label, padding 
       <group position={position} rotation={rotation}>
         <mesh ref={ref} name={label}>
           <planeGeometry args={[1 - padding, 1 - padding]} ></planeGeometry>
-          <meshBasicMaterial map={texture} side={FrontSide}/>
+          <meshBasicMaterial map={texture} side={DoubleSide}/>
         </mesh>
         <Text
           position={[0, -(0.5 - textSize), 0]} // Position the text below the plane

@@ -8,18 +8,24 @@ import { Group, Mesh, Vector3 } from "three"
 import { useFrame, useThree } from "@react-three/fiber"
 import { VertexNormalsHelper } from "three/examples/jsm/helpers/VertexNormalsHelper.js"
 
+function finInsideInterval(arr: number[]){
+    if (arr.length === 0) return null;
+
+
+}
+
 //Tem que ser closer porém não maior que um certo tanto, senão as costas fica sempre front
-const closestToZero = (arr: number[]) => {
-    if (!arr || arr.length === 0) return null;
+const findClosestToMinusOne = (arr: number[]) => {
+    if (arr.length === 0) return null;
   
     let closest = arr[0];
-    let smallestDistance = Math.abs(arr[0]);
+    let minDistance = Math.abs(arr[0] + 1);
   
     for (let i = 1; i < arr.length; i++) {
-      const distance = Math.abs(arr[i]);
-      if (distance < smallestDistance) {
-        smallestDistance = distance;
+      const currentDistance = Math.abs(arr[i] + 1);
+      if (currentDistance < minDistance) {
         closest = arr[i];
+        minDistance = currentDistance;
       }
     }
   
@@ -28,8 +34,11 @@ const closestToZero = (arr: number[]) => {
 
 export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoElement | null}){
     const [videoCubeState, setVideoCubeState] = useState<Group | null>(null)
-    const videoCubeRef = useRef<Group>(null)
+    const videoCubeRef = useRef<Group | null>(null)
     const ref = videoCubeRef
+
+    const planeFacingCameraRef = useRef<Mesh | null>(null)
+
     useEffect(()=>{
         console.log(videoCubeRef)
         if(videoCubeRef.current){
@@ -82,24 +91,39 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
                 // Check if the plane is facing the camera
                 //console.log(dotProduct)
                 return dotProduct
-                const isFacingCamera = dotProduct < 0;
-
-                const difMinusOne =  Math.abs(dotProduct + 1)
-                console.log(difMinusOne)
-
             })
-            //console.log(dotProducts)
-            const closerDot = closestToZero(dotProducts)
-            console.log((dotProducts[0]))
+           
+            //Paint every one red
+            //@ts-ignore
+            planeMashes.forEach(item => item.material.color.set("red"))
+
+            //Find the planes withtin the camera range
+            const insideTheRange = dotProducts.filter((item, index) => {
+                if(item >= -1 && item <= -0.7) return item
+            })
+            
+            //Fin the closest one
+            const closerDot = findClosestToMinusOne(insideTheRange)
+            
+            //Paint the closest green
+            //save the closer on a ref
+            if(closerDot){
+                const closerIndex = dotProducts.indexOf(closerDot) 
+                //@ts-ignore
+                planeMashes[closerIndex].material.color.set("green")
+                planeFacingCameraRef.current = planeMashes[closerIndex]
+            } else {
+                planeFacingCameraRef.current = null
+            }
 
             //Working!!!! Just need to extend this for more planes and I can detect which face is facing the camera.
-            const isFacingCamera = dotProducts[0] > -1 && dotProducts[0] < -0.7
+            //const isFacingCamera = dotProducts[0] > -1 && dotProducts[0] < -0.7
 
-            console.log("is faceing: ",isFacingCamera);
+            //console.log("is faceing: ",isFacingCamera);
             
     //      // For visualization, change color based on facing status
             //@ts-ignore
-            planeMashes[0].material.color.set(isFacingCamera ? 'green' : 'red');
+            //planeMashes[0].material.color.set(isFacingCamera ? 'green' : 'red');
             // if(closerDot){
             //     const closerPlane = planeMashes[dotProducts.indexOf(closerDot)]
             //     console.log(closerPlane.name)
