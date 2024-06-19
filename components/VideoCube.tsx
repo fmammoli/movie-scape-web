@@ -36,7 +36,13 @@ const VideoCube = forwardRef(function VideoCube({padding}:VideoFaceCubeProps, re
         const videos = [
             "/lluvia.mp4",
             "/mudflat_scatter.mp4",
-            "/zigzag.mp4"
+            "/zigzag.mp4",
+            "/video/aurora0.mp4",
+            "/video/aurora1.mp4",
+            "/video/aurora2.mp4",
+            "/video/aurora3.mp4",
+            "/video/aurora4.mp4",
+            "/video/silent_movie0.mp4",
         ]
     
         const videoElements = videos.map(videoSrc => {
@@ -55,20 +61,21 @@ const VideoCube = forwardRef(function VideoCube({padding}:VideoFaceCubeProps, re
     
     const labels = ['Front', 'Back', 'Top', 'Bottom', 'Right', 'Left'];
     
-    const gap = 0.2
+    const gap = 1
+    
     return (
         <>
         {
           <group ref={ref}>
             <VideoFace
-              position={[0, 0, 0.5 + gap]}
+              position={[0,0, 0.5 + gap]}
               rotation={[0, 0, 0]}
               texture={textures[0]}
               label={labels[0]}
               padding={padding}
             />
             <VideoFace
-              position={[0, 0, - 0.5 - gap]}
+              position={[0, 0, -0.5 - gap]}
               rotation={[0, Math.PI , 0]}
               texture={textures[1]}
               label={labels[1]}
@@ -81,6 +88,7 @@ const VideoCube = forwardRef(function VideoCube({padding}:VideoFaceCubeProps, re
               label={labels[2]}
               padding={padding}
             />
+            
             <VideoFace
               position={[0, -0.5 - gap, 0]}
               rotation={[Math.PI/2, 0 , 0]}

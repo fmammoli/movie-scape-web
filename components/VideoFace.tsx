@@ -56,7 +56,7 @@ export default function VideoFace({ position, rotation, texture, label, padding 
     return (
       <group position={position} rotation={rotation}>
         <mesh ref={ref} name={label}>
-          <planeGeometry args={[1 - padding, 1 - padding]} ></planeGeometry>
+          <planeGeometry args={[2 - padding, 2 - padding]} ></planeGeometry>
           <meshBasicMaterial map={texture} side={DoubleSide}/>
         </mesh>
         <Text

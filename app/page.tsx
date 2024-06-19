@@ -6,10 +6,10 @@ const Wrapper = dynamic(()=> import("@/components/Wrapper"), {ssr: false})
 
 export default function Home() {
   return (
-    <main className={"h-svh"}>
-      <div><Wrapper></Wrapper></div>
+    <main className={"h-svh bg-black"}>
+      <Wrapper></Wrapper>
       
-      <div className="absolute bottom-0 left-0 p-10">
+      {/* <div className="absolute bottom-0 left-0 p-10">
         <p className={"font-black"}>Como utilizar:</p>
         <ul className="flex gap-8">
           <li className="">
@@ -30,7 +30,7 @@ export default function Home() {
           </li>
         </ul>
         
-      </div>
+      </div> */}
     </main>
   );
 }

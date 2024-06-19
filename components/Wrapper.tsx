@@ -3,7 +3,6 @@
 import { Canvas } from "@react-three/fiber"
 import {useEffect, useRef, useState } from "react"
 import Webcam from "react-webcam"
-import HandControlledScene from "./HandControlledScene";
 import MovieScapeScene from "./MovieScapeScene";
 
 
@@ -35,13 +34,13 @@ export default function Wrapper(){
 
     return (
         <div className="flex justify-center">
-            <Webcam mirrored ref={webcamRef} onUserMedia={handleStartStream} className={""}></Webcam>
-                <div className="absolute top-0 w-[640px] h-[480px]">
-                    <Canvas ref={canvasRef} className={"border-red-400"}>
-                        {/* <HandControlledScene video={video}></HandControlledScene> */}
-                        <MovieScapeScene webcamVideo={video}></MovieScapeScene>
-                    </Canvas>
-                </div>
+            <Webcam mirrored ref={webcamRef} onUserMedia={handleStartStream} className={"hidden"}></Webcam>
+            <div className="absolute top-0 w-full h-full">
+                <Canvas ref={canvasRef} className={"border-red-400"}>
+                    {/* <HandControlledScene video={video}></HandControlledScene> */}
+                    <MovieScapeScene webcamVideo={video}></MovieScapeScene>
+                </Canvas>
+            </div>
         </div>
     )
 }
