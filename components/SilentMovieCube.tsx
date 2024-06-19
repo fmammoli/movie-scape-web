@@ -1,8 +1,6 @@
-import { forwardRef, Ref, useEffect, useRef, useState } from "react";
-import { Group, Vector3, VideoTexture } from "three";
+import { forwardRef, Ref, useState } from "react";
+import { Group, VideoTexture } from "three";
 import VideoFace from "./VideoFace";
-import ColorFace from "./ColorFace";
-import { useFrame } from "@react-three/fiber";
 
 type VideoFaceCubeProps = {
     padding:number

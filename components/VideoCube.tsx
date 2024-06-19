@@ -10,54 +10,26 @@ type VideoFaceCubeProps = {
 
 const VideoCube = forwardRef(function VideoCube({padding}:VideoFaceCubeProps, ref:Ref<Group>){
   
-  function buildVideoTexture(){
-    const videos = [
-      "/lluvia.mp4",
-      "/mudflat_scatter.mp4",
-      "/zigzag.mp4"
-    ]
+    function buildVideoTexture(){
+      const videos = [
+        "/lluvia.mp4",
+        "/mudflat_scatter.mp4",
+        "/zigzag.mp4"
+      ]
 
-    const videoElements = videos.map(videoSrc => {
-        const video = document.createElement('video');
-        video.src = videoSrc;
-        video.crossOrigin = 'anonymous';
-        video.loop = true;
-        return video;
-    })
+      const videoElements = videos.map(videoSrc => {
+          const video = document.createElement('video');
+          video.src = videoSrc;
+          video.crossOrigin = 'anonymous';
+          video.loop = true;
+          return video;
+      })
 
-    const videoTextures = videoElements.map((video) => new VideoTexture(video))
-    return videoTextures
-  }
+      const videoTextures = videoElements.map((video) => new VideoTexture(video))
+      return videoTextures
+    }
   
-  const [textures, setTextures] = useState<VideoTexture[]>(()=>buildVideoTexture());
-    
-
-    useEffect(()=>{
-        const videos = [
-            "/lluvia.mp4",
-            "/mudflat_scatter.mp4",
-            "/zigzag.mp4",
-            "/video/aurora0.mp4",
-            "/video/aurora1.mp4",
-            "/video/aurora2.mp4",
-            "/video/aurora3.mp4",
-            "/video/aurora4.mp4",
-            "/video/silent_movie0.mp4",
-        ]
-    
-        const videoElements = videos.map(videoSrc => {
-            const video = document.createElement('video');
-            video.src = videoSrc;
-            video.crossOrigin = 'anonymous';
-            video.loop = true;
-            return video;
-        })
-    
-        const videoTextures = videoElements.map((video) => new VideoTexture(video))
-        //setTextures(videoTextures)    
-    },[])
-
-
+    const [textures, setTextures] = useState<VideoTexture[]>(()=>buildVideoTexture());
     
     const labels = ['Front', 'Back', 'Top', 'Bottom', 'Right', 'Left'];
     

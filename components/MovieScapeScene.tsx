@@ -176,7 +176,7 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
             <PerspectiveCamera makeDefault position={[0,0,5]}></PerspectiveCamera>
             {/* <VideoDodecahedron padding={0} ref={videoCubeRef}></VideoDodecahedron> */}
             <SilentMovieCube ref={videoCubeRef} padding={0}></SilentMovieCube>
-            <Sparkles position={[0,0,-3]} size={8} opacity={0.8} speed={0.5} scale={2}></Sparkles>
+            <Sparkles position={[0,0,0]} size={8} opacity={0.8} speed={0.5} scale={2}></Sparkles>
             {webcamVideo && <HandControls video={webcamVideo} onSnap={handleSnap} onPinchMove={handlePinchMove}></HandControls>}
             <OrbitControls />
         </>
