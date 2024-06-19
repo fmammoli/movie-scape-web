@@ -41,7 +41,7 @@ const VideoCube = forwardRef(function SilentMovieCube({padding}:VideoFaceCubePro
     return (
         <>
         {
-          <group ref={ref}>
+          <group ref={ref} position={[0,0,0]}>
             <VideoFace
               position={[0,0, 0.5 + gap]}
               rotation={[0, 0, 0]}

@@ -10,12 +10,11 @@ import { VertexNormalsHelper } from "three/examples/jsm/helpers/VertexNormalsHel
 import VideoDodecahedron from "./VideoDodecahedron"
 import SilentMovieCube from "./SilentMovieCube"
 
-function finInsideInterval(arr: number[]){
-    if (arr.length === 0) return null;
-
-
-}
-
+function findClosestNumber(array:number[], target:number) {
+    return array.reduce((closest, num) => {
+      return Math.abs(num - target) < Math.abs(closest - target) ? num : closest;
+    }, Infinity);
+  }
 //Tem que ser closer porém não maior que um certo tanto, senão as costas fica sempre front
 const findClosestToMinusOne = (arr: number[]) => {
     if (arr.length === 0) return null;
@@ -96,13 +95,19 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
             planeMashes.forEach(item => item.material.color.set("red"))
 
             //Find the planes withtin the camera range
+            //console.log(dotProducts)
             const insideTheRange = dotProducts.filter((item, index) => {
+                //This is for position 0 of video cube group
                 if(item >= -1 && item <= -0.7) return item
+                
+                //For video cube -3 position
+                //if(item <= 1 && item >= 0.8) return item
             })
             
             //Fin the closest one
             const closerDot = findClosestToMinusOne(insideTheRange)
             
+            //const closerDot = findClosestNumber(insideTheRange, -1)
             //Paint the closest green
             //save the closer on a ref
             if(closerDot){
@@ -171,7 +176,7 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
             <PerspectiveCamera makeDefault position={[0,0,5]}></PerspectiveCamera>
             {/* <VideoDodecahedron padding={0} ref={videoCubeRef}></VideoDodecahedron> */}
             <SilentMovieCube ref={videoCubeRef} padding={0}></SilentMovieCube>
-            <Sparkles position={[0,0,0]} size={8} opacity={0.8} speed={0.5} scale={2}></Sparkles>
+            <Sparkles position={[0,0,-3]} size={8} opacity={0.8} speed={0.5} scale={2}></Sparkles>
             {webcamVideo && <HandControls video={webcamVideo} onSnap={handleSnap} onPinchMove={handlePinchMove}></HandControls>}
             <OrbitControls />
         </>

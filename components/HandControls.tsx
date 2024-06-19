@@ -21,7 +21,7 @@ function convertTo3DCoordinates(x: number, y: number, videoWidth:number, videoHe
     position.copy(camera.position).add(vector.multiplyScalar(distance))
     position.x = position.x * -1
     position.y = position.y 
-    position.z = 1.6
+    //position.z = -1
     return position
 
 }
