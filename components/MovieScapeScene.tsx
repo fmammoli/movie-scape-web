@@ -155,7 +155,7 @@ export default function MovieScapeScene({webcamVideo}:{webcamVideo: HTMLVideoEle
                 const rotationAxisY = new Vector3(1,0,0);
     
                 const worldRotationAxisX = rotationAxisX.clone().applyQuaternion(camera.quaternion).normalize()
-                if(Math.abs(deltaY) > Math.abs(deltaX * 3)){
+                if(Math.abs(deltaY) > Math.abs(deltaX * 2)){
                     const worldRotationAxisY = rotationAxisY.clone().applyQuaternion(camera.quaternion).normalize()
                     videoCubeRef.current.rotateOnWorldAxis(worldRotationAxisY, -deltaY * rotationSpeed)
                 }

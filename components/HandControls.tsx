@@ -21,7 +21,7 @@ function convertTo3DCoordinates(x: number, y: number, videoWidth:number, videoHe
     position.copy(camera.position).add(vector.multiplyScalar(distance))
     position.x = position.x * -1
     position.y = position.y 
-    // position.z = 1
+    position.z = 1.6
     return position
 
 }
@@ -88,10 +88,14 @@ export default function HandControls({video, onSnap, onPinchMove}:HandControlsPr
 
                 const thumbTip = keypointsThreeJS[4];
                 const indexTip = keypointsThreeJS[8];
-
-                const pinchDist = thumbTip.distanceTo(indexTip);
                 
-                const isPinching = pinchDist <= PINCH_DISTANCE_THRESHOLD ? true : false;
+                const middleTip = keypointsThreeJS[12];
+                const thumbMCP = keypointsThreeJS[2];
+                
+                const pinchDist = thumbTip.distanceTo(indexTip);
+                const auxPinchDist = middleTip.distanceTo(thumbMCP)
+
+                const isPinching = pinchDist <= PINCH_DISTANCE_THRESHOLD && auxPinchDist > 1.3 ? true : false;
                 
                 if(isPinching){
                     if(debug){
